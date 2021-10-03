@@ -3,7 +3,8 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-
+var session = require('express-session');
+var FileStore = require('session-file-store')(session);
 
 
 
@@ -36,37 +37,59 @@ app.set('view engine', 'jade');
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser(secretKey));
+//app.use(cookieParser(secretKey));
+
+app.use(session({
+  name: 'session-id',
+  secret: '12345-67890',
+  saveUninitialized: false,
+  resave: false,
+  store: new FileStore()
+}))
 
 function auth(req, res, next) {
-  console.log(req.headers);
+  console.log(req.session);
 
-  let authHeader = req.headers.authorization;
+  if(!req.session.user){
+    let authHeader = req.headers.authorization;
 
-  if(!authHeader){
-    let err = new Error('You are not authenticated');
+    if(!authHeader){
+      let err = new Error('You are not authenticated');
 
-    res.setHeader('WWW-Authenticate', 'Basic');
-    err.status = 401;
-    return next(err);
-  }
+      res.setHeader('WWW-Authenticate', 'Basic');
+      err.status = 401;
+      return next(err);
+    }
 
-  let auth = new Buffer(authHeader.split(' ')[1], 'base64').toString().split(':');
+    let auth = new Buffer.from(authHeader.split(' ')[1], 'base64').toString().split(':');
 
-  let username = auth[0];
-  let password = auth[1];
+    let username = auth[0];
+    let password = auth[1];
 
-  if(username === 'admin' && password === 'password'){
-    next();
+    if(username === 'admin' && password === 'password'){
+      req.session.user = 'admin';
+      next();
+    }
+    else{
+      let err = new Error('You are not authenticated');
+
+      res.setHeader('WWW-Authenticate', 'Basic');
+      err.status = 401;
+      return next(err);
+    }
   }
   else{
-    let err = new Error('Wrong username or password');
+    if (req.session.user === 'admin'){
+      next();
+    }
+    else{
+      let err = new Error('You are not authenticated');
 
-    res.setHeader('WWW-Authenticate', 'Basic');
-    err.status = 401;
-    return next(err);
+      res.setHeader('WWW-Authenticate', 'Basic');
+      err.status = 401;
+      return next(err);
+    }
   }
-
 }
 
 app.use(auth);
