@@ -5,7 +5,8 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var session = require('express-session');
 var FileStore = require('session-file-store')(session);
-
+var passport = require('passport');
+var authenticate = require('./authenticate');
 
 
 var indexRouter = require('./routes/index');
@@ -21,8 +22,6 @@ const Dishes = require('./models/dishes');
 
 const url = 'mongodb://localhost:27017/conTest';
 const connect = mongoose.connect(url);
-
-const secretKey = '12345-67890';
 
 connect.then((db) => {
   console.log('Connected correctly to server');
@@ -47,26 +46,23 @@ app.use(session({
   store: new FileStore()
 }));
 
+app.use(passport.initialize());
+app.use(passport.session());
+
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
+
 
 function auth(req, res, next) {
   console.log(req.session);
 
-  if(!req.session.user){
+  if(!req.user){
       let err = new Error('You are not authenticated');
       err.status = 403;
       return next(err);
   }
   else{
-    if (req.session.user === 'authenticated'){
       next();
-    }
-    else{
-      let err = new Error('You are not authenticated');
-      err.status = 403;
-      return next(err);
-    }
   }
 }
 
