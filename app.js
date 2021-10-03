@@ -5,6 +5,8 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
 
+
+
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 
@@ -19,6 +21,8 @@ const Dishes = require('./models/dishes');
 const url = 'mongodb://localhost:27017/conTest';
 const connect = mongoose.connect(url);
 
+const secretKey = '12345-67890';
+
 connect.then((db) => {
   console.log('Connected correctly to server');
 }, (err) => { console.log(err)});
@@ -32,7 +36,41 @@ app.set('view engine', 'jade');
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
+app.use(cookieParser(secretKey));
+
+function auth(req, res, next) {
+  console.log(req.headers);
+
+  let authHeader = req.headers.authorization;
+
+  if(!authHeader){
+    let err = new Error('You are not authenticated');
+
+    res.setHeader('WWW-Authenticate', 'Basic');
+    err.status = 401;
+    return next(err);
+  }
+
+  let auth = new Buffer(authHeader.split(' ')[1], 'base64').toString().split(':');
+
+  let username = auth[0];
+  let password = auth[1];
+
+  if(username === 'admin' && password === 'password'){
+    next();
+  }
+  else{
+    let err = new Error('Wrong username or password');
+
+    res.setHeader('WWW-Authenticate', 'Basic');
+    err.status = 401;
+    return next(err);
+  }
+
+}
+
+app.use(auth);
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
