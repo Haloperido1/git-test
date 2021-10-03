@@ -2,6 +2,7 @@ const express = require('express');
 const  bodyParser = require('body-parser');
 let User = require('../models/user');
 let passport = require('passport');
+let authenticate = require('../authenticate');
 
 
 let router = express.Router();
@@ -24,16 +25,19 @@ router.post('/signup', function (req, res, next){
             passport.authenticate('local')(req, res, () => {
                 res.statusCode = 200;
                 res.setHeader('Content-Type', 'application/json');
-                res.json({success: true, status: 'Registration successful'});
+                res.json({success: true, token: token, status: 'Registration successful'});
             });
         }
       });
 });
 
 router.post('/login', passport.authenticate('local'), (req,res) => {
+
+    let token = authenticate.getToken({_id: req.user._id});
+
     res.statusCode = 200;
     res.setHeader('Content-Type', 'application/json');
-    res.json({success:true, status: 'Login successful'});
+    res.json({success:true, token: token, status: 'Login successful'});
 });
 
 router.get('/logout', (req,res,next) =>{
