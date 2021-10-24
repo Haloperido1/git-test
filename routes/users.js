@@ -10,7 +10,13 @@ router.use(bodyParser.json());
 
 /* GET users listing. */
 router.get('/', function(req, res, next) {
-  res.send('respond with a resource');
+  // User.find({})
+  //     .then(
+  //         res.statusCode = 200;
+  //         res.setHeader('Content-Type', 'application/json');
+  //         // res.json
+  //   // user
+  //     )
 });
 
 router.post('/signup', function (req, res, next){
@@ -23,7 +29,7 @@ router.post('/signup', function (req, res, next){
         }
         else{
             if (req.body.firstname){
-                user.fistname = req.body.fistname;
+                user.firstname = req.body.firstname;
             }
             if (req.body.lastname){
                 user.lastname = req.body.lastname;
