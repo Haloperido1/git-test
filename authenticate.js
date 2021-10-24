@@ -23,7 +23,7 @@ opts.secretOrKey = config.secretKey;
 
 exports.jwtPassport = passport.use(new JwtStrategy(opts,
      (jwt_payload, done) => {
-        console.log("JWT payload: ", jwt_payload);
+      //  console.log("JWT payload: ", jwt_payload);
         User.findOne({_id: jwt_payload._id}, (err,user) =>{
             if(err) {
                 return done(err, false);
@@ -40,11 +40,11 @@ exports.jwtPassport = passport.use(new JwtStrategy(opts,
 exports.verifyUser = passport.authenticate('jwt', {session: false});
 exports.verifyAdmin = (req, res, next) => {
     if(req.user.admin === true){
-        console.log("admin");
+      //  console.log("admin");
         return next();
     }
     else {
-        console.log("not admin");
+        //console.log("not admin");
         return res.status(403);
     }
 };
@@ -56,14 +56,14 @@ exports.verifyOrdynaryUser = async (req, res, next) => {
 
 
     const dish = await Dishes.findOne({ 'comments._id': commentId });
-    console.log(dish?.toJSON?.());
+  //  console.log(dish?.toJSON?.());
     // console.log(comment.author);
     if( userId === dish.comments.author || admin === true){
-        console.log("You have access");
+       // console.log("You have access");
         return next();
     }
     else {
-        console.log("This is not your comment");
+       // console.log("This is not your comment");
         return res.status(403).end("This is not your comment");
     }
     return next();
